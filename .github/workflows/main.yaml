@@ -33,20 +33,20 @@ jobs:
           npm install
           npx playwright install-deps
           npx playwright install
-        working-directory: ./complete-application
+        working-directory: ./app
       - name: Start app
         run: npm run dev & # & in background
-        working-directory: ./complete-application
+        working-directory: ./app
 
       - name: Run Playwright tests
         run: npx playwright test --project=chromium
-        working-directory: ./complete-application
+        working-directory: ./app
 
 # only for debugging playwright errors
 #      - uses: actions/upload-artifact@v4
 #        if: always()
 #        with:
 #          name: playwright-screenshot
-#          path: complete-application/screenshot.png
+#          path: app/screenshot.png
 #          retention-days: 2
       # Done!
