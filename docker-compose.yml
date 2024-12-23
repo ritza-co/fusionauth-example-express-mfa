@@ -45,12 +45,26 @@ services:
     networks:
       - search_net
 
+  mailcatcher:
+    image: sj26/mailcatcher
+    ports:
+      - "1025:1025"
+      - "1080:1080"
+    healthcheck:
+      interval: 10s
+      retries: 80
+      test: wget -q -O /dev/null http://mailcatcher:1080/
+    networks:
+      - mailcatcher_net
+
   fusionauth:
     image: fusionauth/fusionauth-app:latest
     depends_on:
       db:
         condition: service_healthy
       search:
+        condition: service_healthy
+      mailcatcher:
         condition: service_healthy
     environment:
       DATABASE_URL: jdbc:postgresql://db:5432/fusionauth
@@ -67,6 +81,7 @@ services:
     networks:
       - db_net
       - search_net
+      - mailcatcher_net
     restart: unless-stopped
     ports:
       - 9011:9011
@@ -78,6 +93,8 @@ networks:
   db_net:
     driver: bridge
   search_net:
+    driver: bridge
+  mailcatcher_net:
     driver: bridge
 
 volumes:
