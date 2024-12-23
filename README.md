@@ -57,3 +57,9 @@ npm run dev
 ```
 
 Go to `https://localhost:8080` to log in and make some change.
+
+## Troubleshooting
+
+Magic links don't work on safari when using localhost.
+
+Use chrome or firefox instead.
