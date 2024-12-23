@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: 22
       # Set up the build environment
-      - run: npm ci --prefix "./complete-application/"
+      - run: npm ci --prefix "./app/"
 
       # Build
       - name: Copy our kickstart file over so it gets picked up
