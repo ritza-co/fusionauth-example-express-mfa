@@ -41,7 +41,7 @@ You can log into the [FusionAuth admin UI](http://localhost:9011/admin) and look
 To run the application, first go into the project directory
 
 ```shell
-cd application
+cd app
 ```
 
 Install dependencies
