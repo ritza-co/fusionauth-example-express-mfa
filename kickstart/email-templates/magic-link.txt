@@ -7,4 +7,4 @@ You have requested to log into ChangeBank using this email address. If you do no
 
 ${url}
 
-- ChangeBank Admin
+- Admin
