@@ -122,9 +122,9 @@ app.get('/oauth-redirect', async (req, res, next) => {
     return;
   }
 
-//tag::oauth-redirect[]
   try {
     // Exchange Auth Code and Verifier for Access Token
+//tag::oauth-redirect[]
     const accessToken = (await client.exchangeOAuthCodeForAccessTokenUsingPKCE(authCode,
       clientId,
       clientSecret,
@@ -136,6 +136,7 @@ app.get('/oauth-redirect', async (req, res, next) => {
       return;
     }
     res.cookie(userToken, accessToken, { httpOnly: true })
+//end::oauth-redirect[]
 
     // Exchange Access Token for User
     const userResponse = (await client.retrieveUserInfoFromAccessToken(accessToken.access_token)).response;
@@ -152,7 +153,6 @@ app.get('/oauth-redirect', async (req, res, next) => {
       error: err
     }))
   }
-//end::oauth-redirect[]
 });
 
 //tag::account[]
