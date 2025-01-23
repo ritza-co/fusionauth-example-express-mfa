@@ -5,6 +5,7 @@ You will follow the instructions on the [Start Here](https://fusionauth.io/docs/
 ## Starting the GitPod Environment
 
 Click here to start the GitPod environment:
+
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/synedra/fusionauth-example-express-start-here)
 
 
@@ -16,11 +17,6 @@ The GitPod environment has docker containers for the database, FusionAuth server
 
 Note that GitPod does not allow pasting from the clipboard by default, but it will request your permission to perform that pasting, only once.
 
-## Opening the Admin UI 
-
-In the terminal, to open the FusionAuth administrative UI:
-
-
 ## Starting the Start Here application
 
 In the terminal, to start the Start Here application:
@@ -31,17 +27,13 @@ npm install
 npm run dev
 ```
 
-To access the running Start Here application:
-
-```
-gp preview `gp url 8080`
-```
+To access the running Start Here application execute `starthere`
 
 ## Accessing the Email Catcher
 
-To access the running email catcher from the terminal:
+To access the running email catcher from the terminal use the command `startemail`
 
-```
-gp preview `gp url 1080`
-```
+## Accessing the Admin Screen
+
+To access the FusionAuth admin UI use the `startadmin` command
 
