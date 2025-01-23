@@ -44,7 +44,7 @@ test('log in', async ({ page }) => {
   //only button
   const button = await page.locator('.button.blue');
   await button.click();
-  await expect(page).toHaveTitle(/FusionAuth Express Web/);
+  await expect(page).toHaveTitle(/FusionAuth Start Here Application | Home/);
 
   // Expect to see the user's email on the page
   await expect(page.getByText('richard@example.com')).toBeVisible();
