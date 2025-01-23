@@ -5,7 +5,7 @@ test('has title', async ({ page }) => {
   await page.goto('http://localhost:8080/');
 
   // Expect a title "to contain" a substring.
-  await expect(page).toHaveTitle(/FusionAuth Express Web/);
+  await expect(page).toHaveTitle(/FusionAuth Start Here Application | Account"/);
 });
 
 test('FA has title', async ({ page }) => {
@@ -44,7 +44,7 @@ test('log in', async ({ page }) => {
   //only button
   const button = await page.locator('.button.blue');
   await button.click();
-  await expect(page).toHaveTitle(/FusionAuth Express Web/);
+  await expect(page).toHaveTitle(/FusionAuth Start Here Application | Account"/);
 
   // Expect to see the user's email on the page
   await expect(page.getByText('richard@example.com')).toBeVisible();
