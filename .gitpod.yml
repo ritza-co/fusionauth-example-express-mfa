@@ -5,6 +5,9 @@ tasks:
   # ------------------------------------
   - name: docker-compose
     command: |
+      alias startadmin 'gp preview `gp url 9011`/admin'
+      alias startemail 'gp preview `gp url 1080`
+      alias starthere 'gp preview `gp url 3000` 
       gp open README.md
       bash /workspace/fusionauth-example-express-start-here/ports.sh
       docker compose up
