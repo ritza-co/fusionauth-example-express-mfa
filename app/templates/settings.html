@@ -1,0 +1,103 @@
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>FusionAuth MFA Configuration | User Account</title>
+  <link rel="stylesheet" href="/static/css/changebank.css">
+</head>
+<body>
+  <div id="page-container">
+    <div id="page-header">
+      <div id="logo-header">
+        <img src="https://fusionauth.io/cdn/samplethemes/changebank/changebank.svg" />
+        <div class="h-row">
+          <p class="header-email"></p>
+          <a class="button-lg" href="/logout">Logout</a>
+        </div>
+      </div>
+
+      <div id="menu-bar" class="menu-bar">
+        <a class="menu-link" href="/dashboard">Dashboard</a>
+        <a class="menu-link inactive" href="/account">Account</a>
+      </div>
+    </div>
+
+    <div style="flex: 1;">
+      <div class="column-container">
+        <!-- User Information Section -->
+        <div class="app-container user-container">
+          <h3>User Information</h3>
+          <p><strong>Name:</strong> <span class="user-name"></span></p>
+          <p><strong>Email:</strong> <span class="user-email"></span></p>
+        </div>
+
+        <!-- MFA Configuration Section -->
+        <div class="app-container mfa-container">
+          <h3>MFA Configuration</h3>
+
+          <div class="mfa-item">
+            <p><strong>Authenticator App</strong></p>
+            <button class="change-submit" id="authenticator-btn">Loading...</button>
+          </div>
+
+          <div class="mfa-item">
+            <p><strong>Email 2FA</strong></p>
+            <button class="change-submit" id="email-btn">Loading...</button>
+          </div>
+
+          <div class="mfa-item">
+            <p><strong>SMS 2FA</strong></p>
+            <button class="change-submit" id="sms-btn">Loading...</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Fetch user data from cookies
+      const user = JSON.parse(decodeURIComponent(document.cookie.split('; ').find(c => c.startsWith('userDetails='))?.split('=')[1] || '{}').replace('j:', ''));
+
+      // Display user info
+      document.querySelector('.user-name').innerText = user.name || 'Unknown';
+      document.querySelector('.header-email').innerText = user.email || 'Unknown';
+      document.querySelector('.user-email').innerText = user.email || 'Unknown';
+
+      // Check if MFA is enabled
+      const checkMFA = async () => {
+        const authenticatorEnabled = document.cookie.includes('authenticator-enabled=true');
+        const emailEnabled = document.cookie.includes('email-enabled=true');
+        const smsEnabled = document.cookie.includes('sms-enabled=true');   
+
+        setupMFAButton('authenticator-btn', authenticatorEnabled);
+        setupMFAButton('email-btn', emailEnabled);
+        setupMFAButton('sms-btn', smsEnabled);
+      }
+
+      // Function to update MFA buttons
+      const setupMFAButton = (buttonId, isActive) => {
+        const button = document.getElementById(buttonId);
+        if (isActive) {
+          button.innerText = 'Active';
+          button.disabled = true;
+          button.classList.add('inactive');
+          button.classList.add('button-lg');
+        } else {
+          button.innerText = 'Setup';
+          button.disabled = false;
+          button.classList.remove('inactive');
+          button.classList.remove('button-lg');
+          button.onclick = () => setupMFA(buttonId);
+        }
+      };
+
+      // Function to handle MFA setup
+      const setupMFA = (method) => {
+        
+        // Redirect to MFA setup page
+        window.location.href = `/mfa/${method.replace('-btn', '').toLowerCase()}`;
+      };
+
+      // Load MFA status on page load
+      checkMFA();
+    </script>
+</body>
+</html>

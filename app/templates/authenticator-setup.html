@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Authenticator Setup | FusionAuth</title>
+  <link rel="stylesheet" href="/static/css/changebank.css">
+  <script src="https://cdn.jsdelivr.net/npm/qrious"></script> <!-- QR Code Generator -->
+</head>
+<body>
+  <div id="page-container">
+    <div id="page-header">
+      <div id="logo-header">
+        <img src="https://fusionauth.io/cdn/samplethemes/changebank/changebank.svg" />
+        <div class="h-row">
+          <p class="header-email"></p>
+          <a class="button-lg" href="/logout">Logout</a>
+        </div>
+      </div>
+
+      <div id="menu-bar" class="menu-bar">
+        <a class="menu-link" href="/dashboard">Dashboard</a>
+        <a class="menu-link inactive" href="/account">Account</a>
+      </div>
+    </div>
+
+    <div style="flex: 1;">
+      <div class="column-container">
+        <div class="app-container">
+          <h3>Scan QR Code to Set Up MFA</h3>
+          <p>Scan the QR code below using Google Authenticator, Authy, or another MFA app.</p>
+          <canvas id="qr-code"></canvas> <!-- QR Code will be displayed here -->
+          <p><strong>Secret Key:</strong> <span id="secret-key"></span></p>
+          <p><small>If you cannot scan the QR code, manually enter the secret in your authenticator app.</small></p>
+        </div>
+
+        <div class="app-container">
+          <h3>Enter Verification Code</h3>
+          <form id="verify-mfa-form">
+            <div class="h-row">
+              <input class="change-input" name="verification-code" id="verification-code" type="text" placeholder="Enter 6-digit code" />
+              <input class="change-submit" type="submit" value="Verify" />
+            </div>
+          </form>
+          <div class="error-message"></div>
+        </div>
+
+        <div class="app-container" id="recovery-codes-container" style="display: none;">
+          <h3>Recovery Codes</h3>
+          <p>Save these recovery codes in a secure place. They can be used if you lose access to your authenticator app.</p>
+          <pre id="recovery-codes"></pre>
+          <a class="change-submit" href="/settings">Go Back to Settings</a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Function to get cookies
+      const getCookie = (name) => {
+        const cookies = document.cookie.split('; ');
+        for (let cookie of cookies) {
+          let [key, value] = cookie.split('=');
+          if (key === name) return decodeURIComponent(value);
+        }
+        return null;
+      };
+
+      const user = JSON.parse(decodeURIComponent(document.cookie.split('; ').find(c => c.startsWith('userDetails='))?.split('=')[1] || '{}').replace('j:', ''));
+
+      // Get the secret key from cookies
+      const secret = getCookie("authenticator-secret");
+      const qrCodeData = getCookie("authenticator-qr-code");
+      const userEmail = user.email; // Get user email
+      const issuer = "FusionAuth"; // Change to match your app name
+
+      // Construct the otpauth:// URL
+      if (secret) {
+        const otpAuthUrl = `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(userEmail)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=6&period=30`;
+
+        console.log("Generated otpauth:// URL:", otpAuthUrl); // Debugging step
+
+        // Generate and display the QR code
+        new QRious({
+          element: document.getElementById("qr-code"),
+          value: otpAuthUrl,
+          size: 200
+        });
+
+        // Display the secret key for manual entry
+        document.getElementById("secret-key").innerText = secret;
+      }
+
+      // Handle MFA Verification
+      document.getElementById("verify-mfa-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const verificationCode = document.getElementById("verification-code").value;
+
+
+       const response = await (await fetch('/mfa/verify', {
+          method: 'POST',
+          body: new URLSearchParams({ code: verificationCode, secret, qrCodeData }),
+          headers: { "Content-Type": "application/x-www-form-urlencoded" }
+        })).json();
+
+        const result = JSON.parse(response);
+
+        console.log("Result:", result);
+
+        if (!!result.recoveryCodes) { // Success
+          // Show recovery codes
+          document.getElementById("recovery-codes").innerText = result.recoveryCodes.join("\n");
+          document.getElementById("recovery-codes-container").style.display = "block";
+        } else {
+          document.querySelector(".error-message").innerText = result.error || "Invalid code. Please try again.";
+        }
+      });
+    </script>
+</body>
+</html>

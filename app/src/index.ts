@@ -63,7 +63,12 @@ const userSession = 'userSession';
 const userToken = 'userToken';
 const userDetails = 'userDetails'; //Non Http-Only with user info (not trusted)
 
-const client = new FusionAuthClient('noapikeyneeded', fusionAuthURL);
+const client = new FusionAuthClient('33052c8a-c283-4e96-9d2a-eb1215c69f8f-not-for-prod', fusionAuthURL);
+
+// Utils for MFA
+const getMF2methodDetails = async (method: string, twoFactor: any) => {
+  return twoFactor.methods.find((m: any) => m.method === method);
+}
 
 app.use(cookieParser());
 /** Decode Form URL Encoded data */
@@ -216,6 +221,118 @@ app.post("/make-change", async (req, res) => {
 
 });
 //end::make-change[]
+
+
+//tag::settings[]
+app.get("/settings", async (req, res) => {
+  const userTokenCookie = req.cookies[userToken];
+
+  if (!userTokenCookie) {
+    throw new Error('No user details found in cookie');
+  }
+  const {userId} = userTokenCookie;
+  if (!userId) {
+    throw new Error('No user id found in cookie');
+  }
+
+  const userResponse = await client.retrieveUser(userId);
+
+  for (const method of ['authenticator', 'email', 'sms']) {
+    const mfaMethod = await getMF2methodDetails(method, userResponse.response.user?.twoFactor);
+    res.cookie(`${method}-enabled`, !!mfaMethod);
+  }
+
+  if (!await validateUser(userTokenCookie)) {
+    res.redirect(302, '/');
+  } else {
+    res.sendFile(path.join(__dirname, '../templates/settings.html'));
+  }
+});
+//end::settings[]
+
+//tag::mfa-authenticator[]
+app.get('/mfa/authenticator', async (req, res) => {
+  const userTokenCookie = req.cookies[userToken];
+  if (!await validateUser(userTokenCookie)) {
+    res.redirect(302, '/');
+  } else {
+
+    const {userId} = userTokenCookie;
+    if (!userId) {
+      throw new Error('No user id found in cookie');
+    }
+
+    const authenticatorTokens = await client.generateTwoFactorSecret();
+
+    res.cookie('authenticator-secret', authenticatorTokens.response?.secret);
+    res.cookie('authenticator-qr-code', authenticatorTokens.response?.secretBase32Encoded);
+
+    res.sendFile(path.join(__dirname, '../templates/authenticator-setup.html'));
+  }
+});
+
+app.post('/mfa/authenticator', async (req, res) => {
+  const userTokenCookie = req.cookies[userToken];
+  if (!await validateUser(userTokenCookie)) {
+    res.status(403).json(JSON.stringify({
+      error: 'Unauthorized'
+    }))
+    return;
+  }
+
+  const {userId} = userTokenCookie;
+  if (!userId) {
+    throw new Error('No user id found in cookie');
+  }
+});
+
+//end::mfa-authenticator[]
+
+//tag::mfa-verify[]
+app.post('/mfa/verify', async (req, res) => {
+  try {
+    const userTokenCookie = req.cookies[userToken];
+  if (!await validateUser(userTokenCookie)) {
+    res.status(403).json(JSON.stringify({
+      error: 'Unauthorized'
+    }))
+    return;
+  }
+
+  const {userId} = userTokenCookie;
+  if (!userId) {
+    throw new Error('No user id found in cookie');
+  }
+
+  const {code, secret, qrCodeData} = req.body;
+  if (!code) {
+    throw new Error('No code provided');
+  }
+
+  const verifyResponse = await client.enableTwoFactor(
+    userId,
+    {
+      code,
+      method: 'authenticator',
+      secret: secret,
+      secretBase32Encoded: qrCodeData, 
+    }
+  )
+
+  console.log('Verify Response:', verifyResponse.response);
+
+  res.json(JSON.stringify({
+    recoveryCodes: verifyResponse.response.recoveryCodes,
+  }))
+  } catch (err: any) {
+    console.error(err);
+    res.status(err?.statusCode || 500).json(JSON.stringify({
+      error: err
+    }))
+  }
+
+});
+//end::mfa-verify[]
 
 //tag::logout[]
 app.get('/logout', (req, res, next) => {
