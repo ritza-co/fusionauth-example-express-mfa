@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Phone Verification | FusionAuth</title>
+  <link rel="stylesheet" href="/static/css/changebank.css">
+</head>
+<body>
+  <div id="page-container">
+    <div id="page-header">
+      <div id="logo-header">
+        <img src="https://fusionauth.io/cdn/samplethemes/changebank/changebank.svg" />
+        <div class="h-row">
+          <p class="header-email"></p>
+          <a class="button-lg" href="/logout">Logout</a>
+        </div>
+      </div>
+
+      <div id="menu-bar" class="menu-bar">
+        <a class="menu-link" href="/dashboard">Dashboard</a>
+        <a class="menu-link inactive" href="/account">Account</a>
+      </div>
+    </div>
+
+    <div style="flex: 1;">
+      <div class="column-container">
+        <div class="app-container">
+          <h3>Enter the Verification Code</h3>
+          <p>A verification code has been sent to your phone via SMS. Please enter it below.</p>
+          
+          <form id="verify-sms-form">
+            <div class="h-row">
+              <input class="change-input" name="verification-code" id="verification-code" type="text" placeholder="Enter 6-digit code" />
+              <input class="change-submit" type="submit" value="Verify" />
+            </div>
+          </form>
+          
+          <div class="error-message"></div>
+        </div>
+
+        <div class="app-container" id="code-container" style="display: none;">
+          <pre id="code"></pre>
+          <a class="change-submit" href="/settings">Go Back to Settings</a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.getElementById("verify-sms-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const verificationCode = document.getElementById("verification-code").value;
+
+        const response = await fetch('/mfa/sms-verify', {
+          method: 'POST',
+          body: new URLSearchParams({ code: verificationCode }),
+          headers: { "Content-Type": "application/x-www-form-urlencoded" }
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          // Show success message
+          document.getElementById("code").innerText = "SMS MFA is enabled.";
+          document.getElementById("code-container").style.display = "block";
+        } else {
+          document.querySelector(".error-message").innerText = result.error || "Invalid code. Please try again.";
+        }
+      });
+    </script>
+</body>
+</html>

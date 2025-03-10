@@ -104,8 +104,6 @@
 
         const result = JSON.parse(response);
 
-        console.log("Result:", result);
-
         if (!!result.recoveryCodes) { // Success
           // Show recovery codes
           document.getElementById("recovery-codes").innerText = result.recoveryCodes.join("\n");

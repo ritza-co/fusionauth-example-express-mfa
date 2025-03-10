@@ -285,11 +285,10 @@ app.post('/mfa/authenticator', async (req, res) => {
     throw new Error('No user id found in cookie');
   }
 });
-
 //end::mfa-authenticator[]
 
-//tag::mfa-verify[]
-app.post('/mfa/verify', async (req, res) => {
+//tag::mfa-verify-authenticator[]
+app.post('/mfa/verify-authenticator', async (req, res) => {
   try {
     const userTokenCookie = req.cookies[userToken];
   if (!await validateUser(userTokenCookie)) {
@@ -319,8 +318,6 @@ app.post('/mfa/verify', async (req, res) => {
     }
   )
 
-  console.log('Verify Response:', verifyResponse.response);
-
   res.json(JSON.stringify({
     recoveryCodes: verifyResponse.response.recoveryCodes,
   }))
@@ -332,7 +329,184 @@ app.post('/mfa/verify', async (req, res) => {
   }
 
 });
-//end::mfa-verify[]
+//end::mfa-verify-authenticator[]
+
+//tag::mfa-verify-email[]
+app.get('/mfa/email', async (req, res) => {
+  try {
+    const userTokenCookie = req.cookies[userToken];
+
+    // Validate user session
+    if (!await validateUser(userTokenCookie)) {
+      return res.redirect(302, '/');
+    }
+
+    // Extract user ID
+    const { userId } = userTokenCookie;
+    if (!userId) {
+      throw new Error('No user ID found in cookie');
+    }
+
+    const userResponse = await client.retrieveUser(userId);
+    if (!userResponse) {
+      throw new Error('Failed to retrieve user');
+    }
+
+    // Send the email verification code
+    await client.sendTwoFactorCodeForEnableDisable({
+      userId,
+      email: userResponse?.response.user?.email,
+      method: 'email',
+    });
+
+    // Send the email-setup.html page
+    res.sendFile(path.join(__dirname, '../templates/email-setup.html'));
+
+  } catch (error) {
+    const err = error as any;
+
+    // Log more detailed error information
+    console.error("Error in /mfa/email:", err.exception.fieldErrors);
+
+    // Return an error response instead of crashing the app
+    res.status(500).send("Failed to send email verification code. Please try again.");
+  }
+});
+//end::mfa-verify-email[]
+
+//tag::mfa-verify-email[]
+app.post('/mfa/verify-email', async (req, res) => {
+  try {
+    const userTokenCookie = req.cookies[userToken];
+  if (!await validateUser(userTokenCookie)) {
+    res.status(403).json(JSON.stringify({
+      error: 'Unauthorized'
+    }))
+    return;
+  }
+
+  const {userId} = userTokenCookie;
+  if (!userId) {
+    throw new Error('No user id found in cookie');
+  }
+
+  const {code, email} = req.body;
+  if (!code) {
+    throw new Error('No code provided');
+  }
+
+  // Verifying the code
+
+  const verifyResponse = await client.enableTwoFactor(
+    userId,
+    {
+      code,
+      method: 'email',
+      email,
+    }
+  )
+
+  res.json(JSON.stringify({
+    code: verifyResponse.response.code,
+  }))
+  } catch (err: any) {
+    console.error("Error in /mfa/sms:", err.exception.fieldErrors);
+
+    res.status(err?.statusCode || 500).json(JSON.stringify({
+      error: err
+    }))
+  }
+
+});
+//end::mfa-verify-email[]
+
+//tag::mfa-verify-sms[]
+app.get('/mfa/sms', async (req, res) => {
+  try {
+    const userTokenCookie = req.cookies[userToken];
+
+    // Validate user session
+    if (!await validateUser(userTokenCookie)) {
+      return res.redirect(302, '/');
+    }
+
+    // Extract user ID
+    const { userId } = userTokenCookie;
+    if (!userId) {
+      throw new Error('No user ID found in cookie');
+    }
+
+    const userResponse = await client.retrieveUser(userId);
+    if (!userResponse) {
+      throw new Error('Failed to retrieve user');
+    }
+
+    // Send the sms verification code
+    await client.sendTwoFactorCodeForEnableDisable({
+      userId,
+      email: userResponse?.response.user?.mobilePhone,
+      method: 'sms',
+    });
+
+    // Send the sms-setup.html page
+    res.sendFile(path.join(__dirname, '../templates/sms-setup.html'));
+
+  } catch (error) {
+    const err = error as any;
+
+    // Log more detailed error information
+    console.error("Error in /mfa/sms:", err.exception.fieldErrors);
+
+    // Return an error response instead of crashing the app
+    res.status(500).send("Failed to send sms verification code. Please try again.");
+  }
+});
+//end::mfa-verify-sms[]
+
+//tag::mfa-verify-sms[]
+app.post('/mfa/verify-sms', async (req, res) => {
+  try {
+    const userTokenCookie = req.cookies[userToken];
+  if (!await validateUser(userTokenCookie)) {
+    res.status(403).json(JSON.stringify({
+      error: 'Unauthorized'
+    }))
+    return;
+  }
+
+  const {userId} = userTokenCookie;
+  if (!userId) {
+    throw new Error('No user id found in cookie');
+  }
+
+  const {code, phone} = req.body;
+  if (!code) {
+    throw new Error('No code provided');
+  }
+
+  // Verifying the code
+
+  const verifyResponse = await client.enableTwoFactor(
+    userId,
+    {
+      code,
+      method: 'sms',
+      mobilePhone: phone,
+    }
+  )
+
+  res.json(JSON.stringify({
+    code: verifyResponse.response.code,
+  }))
+  } catch (err: any) {
+    console.error("Error in /mfa/sms:", err.exception.fieldErrors);
+    res.status(err?.statusCode || 500).json(JSON.stringify({
+      error: err
+    }))
+  }
+
+});
+//end::mfa-verify-phone[]
 
 //tag::logout[]
 app.get('/logout', (req, res, next) => {
