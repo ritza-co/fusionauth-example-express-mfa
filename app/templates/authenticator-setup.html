@@ -86,7 +86,7 @@
         });
 
         // Display the secret key for manual entry
-        document.getElementById("secret-key").innerText = secret;
+        document.getElementById("secret-key").innerText = qrCodeData;
       }
 
       // Handle MFA Verification
@@ -96,7 +96,7 @@
         const verificationCode = document.getElementById("verification-code").value;
 
 
-       const response = await (await fetch('/mfa/verify', {
+       const response = await (await fetch('/mfa/verify-authenticator', {
           method: 'POST',
           body: new URLSearchParams({ code: verificationCode, secret, qrCodeData }),
           headers: { "Content-Type": "application/x-www-form-urlencoded" }

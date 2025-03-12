@@ -440,11 +440,16 @@ app.get('/mfa/sms', async (req, res) => {
     if (!userResponse) {
       throw new Error('Failed to retrieve user');
     }
+    const phoneNumber = userResponse?.response.user?.data?.mobilePhone;
+
+    if (!phoneNumber) {
+      return res.status(400).send("No phone number found. Please set a phone number first.");
+    }
 
     // Send the sms verification code
     await client.sendTwoFactorCodeForEnableDisable({
       userId,
-      email: userResponse?.response.user?.mobilePhone,
+      mobilePhone: userResponse?.response.user?.mobilePhone,
       method: 'sms',
     });
 
@@ -455,7 +460,6 @@ app.get('/mfa/sms', async (req, res) => {
     const err = error as any;
 
     // Log more detailed error information
-    console.error("Error in /mfa/sms:", err.exception.fieldErrors);
 
     // Return an error response instead of crashing the app
     res.status(500).send("Failed to send sms verification code. Please try again.");
