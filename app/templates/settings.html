@@ -57,7 +57,7 @@
       const user = JSON.parse(decodeURIComponent(document.cookie.split('; ').find(c => c.startsWith('userDetails='))?.split('=')[1] || '{}').replace('j:', ''));
 
       // Display user info
-      document.querySelector('.user-name').innerText = user.name || 'Unknown';
+      document.querySelector('.user-name').innerText = `${user.given_name || 'Unknown'} ${user.family_name || 'Unknown'}`;
       document.querySelector('.header-email').innerText = user.email || 'Unknown';
       document.querySelector('.user-email').innerText = user.email || 'Unknown';
 

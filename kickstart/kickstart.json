@@ -170,6 +170,36 @@
           }
         }
       }
+    },
+
+    {
+      "method": "POST",
+      "url": "/api/email/template/95392509-e501-4efa-a237-5aa2617965f6",
+      "body": {
+        "emailTemplate": {
+          "defaultFromName": "FusionAuth Development",
+          "defaultSubject": "Your second factor code",
+          "defaultHtmlTemplate": "@{email-templates/2fa.html.ftl}",
+          "defaultTextTemplate": "@{email-templates/2fa.txt.ftl}",
+          "fromEmail": "dev@fusionauth.io",
+          "name": "Two Factor Authentication"
+        }
+      }
+    },
+    {
+      "method": "PATCH",
+      "url": "/api/tenant/#{defaultTenantId}",
+      "body": {
+        "tenant": {
+          "emailConfiguration": {},
+          "multiFactorConfiguration": {
+            "email": {
+              "templateId": "95392509-e501-4efa-a237-5aa2617965f6"}
+          }
+        }
+      }
     }
+
+
   ]
 }
